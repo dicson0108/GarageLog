@@ -2,6 +2,7 @@ package com.garagelog.ui;
 
 import com.garagelog.model.*;
 import com.garagelog.service.VehicleService;
+import com.garagelog.util.DateUtil;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
@@ -68,11 +69,17 @@ public class VehicleDialog extends Dialog<Vehicle> {
         odoField.setPromptText("Current odometer (km)");
 
         DatePicker purchaseDatePicker = new DatePicker(existingVehicle != null ? existingVehicle.getPurchaseDate() : null);
+        purchaseDatePicker.setConverter(DateUtil.getDateConverter());
+        purchaseDatePicker.setPromptText("DD/MM/YYYY");
         TextField priceField = new TextField(existingVehicle != null && existingVehicle.getPurchasePrice() != null ? existingVehicle.getPurchasePrice().toPlainString() : "");
         priceField.setPromptText("Purchase price");
 
         DatePicker insuranceDatePicker = new DatePicker(existingVehicle != null ? existingVehicle.getInsuranceExpiryDate() : null);
+        insuranceDatePicker.setConverter(DateUtil.getDateConverter());
+        insuranceDatePicker.setPromptText("DD/MM/YYYY");
         DatePicker roadTaxDatePicker = new DatePicker(existingVehicle != null ? existingVehicle.getRoadTaxExpiryDate() : null);
+        roadTaxDatePicker.setConverter(DateUtil.getDateConverter());
+        roadTaxDatePicker.setPromptText("DD/MM/YYYY");
 
         TextArea notesArea = new TextArea(existingVehicle != null && existingVehicle.getNotes() != null ? existingVehicle.getNotes() : "");
         notesArea.setPrefRowCount(3);

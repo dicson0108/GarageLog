@@ -6,9 +6,10 @@
 
 ## Features
 
-- **Dashboard** — metric cards, reminders, spending chart, recent activity
-- **Vehicles** — full CRUD with search, filter by status/type/fuel, sort
-- **Vehicle Detail** — tabbed view: Overview · Maintenance · Expenses · Fuel · Cost Summary
+- **Dashboard** — metric cards, 3-row scrollable reminder viewport, spending chart, recent activity
+- **Vehicles** — full CRUD with search, filter by status/type/fuel, sort, empty state cards with one-click filter reset
+- **Vehicle Detail** — tabbed view: Overview · Maintenance · Expenses · Fuel · Cost Summary with full action buttons, horizontal scrolling, and zero text truncation
+- **Date Standardization** — uniform `DD/MM/YYYY` format across all input forms, tables, reminders, and CSV import/export
 - **Reports** — 6-month stacked bar chart + TCO (Total Cost of Ownership) table
 - **Data** — CSV export/import, backup management with one-click restore
 - **Settings** — currency, distance unit, reminder lead times, monthly budget
@@ -26,7 +27,7 @@
 | UI | JavaFX 24 |
 | Serialization | Gson 2.12.1 |
 | Build | Maven 3.9+ |
-| Tests | JUnit 5.11 |
+| Tests | JUnit 5.11 (20 tests) |
 | Theme | McLaren Light (Papaya Orange `#FF8000`) |
 
 ---
@@ -72,11 +73,11 @@ GarageLog/
 │   │   │   ├── service/        # VehicleService, MaintenanceService, ExpenseService,
 │   │   │   │                   # FuelService, ReminderService, SettingsService, ReportService
 │   │   │   ├── ui/             # JavaFX views, dialogs, MainLayout, GarageLogApp
-│   │   │   └── util/           # JsonUtil, CsvUtil, ValidationUtil, PlateNormalizer, SampleDataGenerator
+│   │   │   └── util/           # DateUtil, JsonUtil, CsvUtil, ValidationUtil, PlateNormalizer, SampleDataGenerator
 │   │   └── resources/
 │   │       └── css/
 │   │           └── mclaren-theme.css
-│   └── test/                   # 15 JUnit 5 tests
+│   └── test/                   # 20 JUnit 5 tests
 └── pom.xml
 ```
 
@@ -99,7 +100,7 @@ Writes are atomic (written to `.tmp`, then moved) to prevent corruption on crash
 mvn test
 ```
 
-15 tests covering: plate normalizer, validation, repository (save/load/backup/restore/corrupt-file), vehicle service (CRUD/duplicate/search), fuel consumption, and UI instantiation.
+20 tests covering: date utilities (`dd/MM/yyyy`), plate normalizer, validation, repository (save/load/backup/restore/corrupt-file), vehicle service (CRUD/duplicate/search), fuel consumption, and UI instantiation.
 
 ---
 

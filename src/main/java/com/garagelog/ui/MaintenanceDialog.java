@@ -2,6 +2,7 @@ package com.garagelog.ui;
 
 import com.garagelog.model.MaintenanceRecord;
 import com.garagelog.service.MaintenanceService;
+import com.garagelog.util.DateUtil;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
@@ -26,6 +27,8 @@ public class MaintenanceDialog extends Dialog<MaintenanceRecord> {
         grid.setPadding(new Insets(16));
 
         DatePicker datePicker = new DatePicker(recordToEdit != null ? recordToEdit.getDate() : LocalDate.now());
+        datePicker.setConverter(DateUtil.getDateConverter());
+        datePicker.setPromptText("DD/MM/YYYY");
         TextField odoField = new TextField(recordToEdit != null ? String.valueOf((int) recordToEdit.getOdometer()) : "");
         odoField.setPromptText("Odometer at service (km)");
 
@@ -39,6 +42,8 @@ public class MaintenanceDialog extends Dialog<MaintenanceRecord> {
         workshopField.setPromptText("e.g. Apex Autocare");
 
         DatePicker nextDueDatePicker = new DatePicker(recordToEdit != null ? recordToEdit.getNextServiceDueDate() : null);
+        nextDueDatePicker.setConverter(DateUtil.getDateConverter());
+        nextDueDatePicker.setPromptText("DD/MM/YYYY");
         TextField nextDueOdoField = new TextField(recordToEdit != null && recordToEdit.getNextServiceDueOdometer() != null ? String.valueOf(recordToEdit.getNextServiceDueOdometer().intValue()) : "");
         nextDueOdoField.setPromptText("e.g. 60000");
 

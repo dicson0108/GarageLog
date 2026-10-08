@@ -100,6 +100,7 @@ public class DataView extends ScrollPane {
         bkDesc.setStyle("-fx-text-fill: #64748B; -fx-font-size: 12px;");
 
         backupTable = new TableView<>();
+        backupTable.setPlaceholder(new Label("No backups found."));
         backupTable.setPrefHeight(200);
         backupTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 

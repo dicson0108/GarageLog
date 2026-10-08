@@ -93,7 +93,7 @@ public final class CsvUtil {
                         v.setCurrentOdometer(Double.parseDouble(parts[9].trim()));
                     }
                     if (parts.length > 10 && !parts[10].isBlank()) {
-                        v.setPurchaseDate(LocalDate.parse(parts[10].trim()));
+                        v.setPurchaseDate(DateUtil.parse(parts[10].trim()));
                     }
                     if (parts.length > 11 && !parts[11].isBlank()) {
                         v.setPurchasePrice(new BigDecimal(parts[11].trim()));

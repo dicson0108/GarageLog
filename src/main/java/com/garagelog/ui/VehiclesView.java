@@ -194,10 +194,13 @@ public class VehiclesView extends VBox {
             return row;
         });
 
+        vehicleTable.setPlaceholder(new Label(""));
+
         // Empty state overlay
-        emptyStateBox = new VBox(12);
+        emptyStateBox = new VBox(14);
         emptyStateBox.setAlignment(Pos.CENTER);
         emptyStateBox.setPadding(new Insets(40));
+        emptyStateBox.setStyle("-fx-background-color: #FFFFFF; -fx-background-radius: 10; -fx-border-color: #E8EAED; -fx-border-radius: 10; -fx-border-width: 1;");
         emptyTitle = new Label("No vehicles yet");
         emptyTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #0F172A;");
         emptySubtext = new Label("Add your first vehicle to start tracking maintenance and fuel.");
@@ -352,6 +355,7 @@ public class VehiclesView extends VBox {
         subtitleLabel.setText("One ledger for every journey. " + activeCount + " active vehicles · " + soldCount + " sold.");
 
         if (all.isEmpty()) {
+            vehicleTable.setVisible(false);
             emptyStateBox.setVisible(true);
             emptyTitle.setText("No vehicles yet");
             emptySubtext.setText("Add your first vehicle to start tracking maintenance and fuel.");
@@ -365,6 +369,7 @@ public class VehiclesView extends VBox {
                 });
             });
         } else if (list.isEmpty()) {
+            vehicleTable.setVisible(false);
             emptyStateBox.setVisible(true);
             emptyTitle.setText("No matching vehicles");
             emptySubtext.setText("No vehicles match your current search and filter settings.");
@@ -379,6 +384,7 @@ public class VehiclesView extends VBox {
                 refreshData();
             });
         } else {
+            vehicleTable.setVisible(true);
             emptyStateBox.setVisible(false);
         }
     }

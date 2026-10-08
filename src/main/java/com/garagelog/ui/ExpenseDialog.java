@@ -3,6 +3,7 @@ package com.garagelog.ui;
 import com.garagelog.model.Expense;
 import com.garagelog.model.ExpenseCategory;
 import com.garagelog.service.ExpenseService;
+import com.garagelog.util.DateUtil;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
@@ -26,6 +27,8 @@ public class ExpenseDialog extends Dialog<Expense> {
         grid.setPadding(new Insets(16));
 
         DatePicker datePicker = new DatePicker(expenseToEdit != null ? expenseToEdit.getDate() : LocalDate.now());
+        datePicker.setConverter(DateUtil.getDateConverter());
+        datePicker.setPromptText("DD/MM/YYYY");
 
         ComboBox<ExpenseCategory> categoryCombo = new ComboBox<>();
         categoryCombo.getItems().addAll(ExpenseCategory.values());

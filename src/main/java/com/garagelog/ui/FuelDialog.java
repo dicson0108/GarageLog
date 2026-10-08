@@ -3,6 +3,7 @@ package com.garagelog.ui;
 import com.garagelog.model.FuelFillUp;
 import com.garagelog.service.FuelService;
 import com.garagelog.service.MaintenanceService;
+import com.garagelog.util.DateUtil;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
@@ -28,6 +29,8 @@ public class FuelDialog extends Dialog<FuelFillUp> {
         grid.setPadding(new Insets(16));
 
         DatePicker datePicker = new DatePicker(fillUpToEdit != null ? fillUpToEdit.getDate() : LocalDate.now());
+        datePicker.setConverter(DateUtil.getDateConverter());
+        datePicker.setPromptText("DD/MM/YYYY");
 
         TextField odoField = new TextField(fillUpToEdit != null ? String.valueOf((int) fillUpToEdit.getOdometer()) : "");
         odoField.setPromptText("Odometer (km)");

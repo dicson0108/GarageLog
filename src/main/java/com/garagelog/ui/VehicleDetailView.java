@@ -2,6 +2,7 @@ package com.garagelog.ui;
 
 import com.garagelog.model.*;
 import com.garagelog.service.*;
+import com.garagelog.util.DateUtil;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -27,6 +28,11 @@ public class VehicleDetailView extends VBox {
     private Label subtitleLabel;
     private Label statusBadge;
     private TabPane tabPane;
+    private TableView<MaintenanceRecord> maintenanceTable;
+    private TableView<Expense> expenseTable;
+    private TableView<FuelFillUp> fuelTable;
+    private Tab costTab;
+    private HBox fuelStatRow;
 
     public VehicleDetailView(Vehicle vehicle, VehicleService vehicleService,
                              MaintenanceService maintenanceService, ExpenseService expenseService,
@@ -131,9 +137,20 @@ public class VehicleDetailView extends VBox {
         Tab maintTab = new Tab("Maintenance", createMaintenanceTab());
         Tab expTab = new Tab("Expenses", createExpensesTab());
         Tab fuelTab = new Tab("Fuel", createFuelTab());
-        Tab costTab = new Tab("Cost Summary", createCostSummaryTab());
+        costTab = new Tab("Cost Summary", createCostSummaryTab());
 
         tabPane.getTabs().addAll(overviewTab, maintTab, expTab, fuelTab, costTab);
+
+        tabPane.getSelectionModel().selectedItemProperty().addListener((obs, oldTab, newTab) -> {
+            if (newTab == expTab && expenseTable != null) {
+                expenseTable.requestLayout();
+            } else if (newTab == maintTab && maintenanceTable != null) {
+                maintenanceTable.requestLayout();
+            } else if (newTab == fuelTab && fuelTable != null) {
+                fuelTable.requestLayout();
+            }
+        });
+
         getChildren().add(tabPane);
     }
 
@@ -165,12 +182,12 @@ public class VehicleDetailView extends VBox {
         addDetailRow(grid, r++, "Colour:", vehicle.getColour() != null ? vehicle.getColour() : "-");
         addDetailRow(grid, r++, "VIN:", vehicle.getVin() != null ? vehicle.getVin() : "-");
         addDetailRow(grid, r++, "Current Odometer:", String.format("%,d %s", (int) vehicle.getCurrentOdometer(), settingsService.getSettings().getDistanceUnit()));
-        addDetailRow(grid, r++, "Purchase Date:", vehicle.getPurchaseDate() != null ? vehicle.getPurchaseDate().toString() : "-");
+        addDetailRow(grid, r++, "Purchase Date:", vehicle.getPurchaseDate() != null ? DateUtil.format(vehicle.getPurchaseDate()) : "-");
 
         String currency = settingsService.getSettings().getCurrency();
         addDetailRow(grid, r++, "Purchase Price:", vehicle.getPurchasePrice() != null ? currency + " " + vehicle.getPurchasePrice().setScale(2) : "-");
-        addDetailRow(grid, r++, "Insurance Expiry:", vehicle.getInsuranceExpiryDate() != null ? vehicle.getInsuranceExpiryDate().toString() : "-");
-        addDetailRow(grid, r++, "Road Tax Expiry:", vehicle.getRoadTaxExpiryDate() != null ? vehicle.getRoadTaxExpiryDate().toString() : "-");
+        addDetailRow(grid, r++, "Insurance Expiry:", vehicle.getInsuranceExpiryDate() != null ? DateUtil.format(vehicle.getInsuranceExpiryDate()) : "-");
+        addDetailRow(grid, r++, "Road Tax Expiry:", vehicle.getRoadTaxExpiryDate() != null ? DateUtil.format(vehicle.getRoadTaxExpiryDate()) : "-");
         addDetailRow(grid, r++, "Notes:", vehicle.getNotes() != null && !vehicle.getNotes().isBlank() ? vehicle.getNotes() : "No notes recorded.");
 
         root.getChildren().add(grid);
@@ -184,6 +201,51 @@ public class VehicleDetailView extends VBox {
         v.setStyle("-fx-text-fill: #0F172A;");
         grid.add(l, 0, row);
         grid.add(v, 1, row);
+    }
+
+    private void refreshMaintenance() {
+        if (maintenanceTable != null) {
+            maintenanceTable.getItems().setAll(maintenanceService.getRecordsForVehicle(vehicle.getId()));
+        }
+    }
+
+    private void refreshExpenses() {
+        if (expenseTable != null) {
+            expenseTable.getItems().setAll(expenseService.getExpensesForVehicle(vehicle.getId()));
+        }
+    }
+
+    private void refreshFuel() {
+        if (fuelTable != null) {
+            fuelTable.getItems().setAll(fuelService.getFillUpsForVehicle(vehicle.getId()));
+        }
+        updateFuelStats();
+    }
+
+    private void updateFuelStats() {
+        if (fuelStatRow == null) return;
+        List<FuelService.ConsumptionInterval> intervals = fuelService.calculateConsumptionHistory(vehicle.getId());
+        double avgL100 = 0;
+        double avgKmL = 0;
+        if (!intervals.isEmpty()) {
+            double totalDist = intervals.stream().mapToDouble(FuelService.ConsumptionInterval::distanceKm).sum();
+            double totalLitres = intervals.stream().mapToDouble(FuelService.ConsumptionInterval::litresConsumed).sum();
+            if (totalDist > 0 && totalLitres > 0) {
+                avgL100 = (totalLitres / totalDist) * 100.0;
+                avgKmL = totalDist / totalLitres;
+            }
+        }
+        fuelStatRow.getChildren().setAll(
+                createMiniStat("Average Consumption", avgL100 > 0 ? String.format("%.2f L/100 km", avgL100) : "N/A"),
+                createMiniStat("Fuel Efficiency", avgKmL > 0 ? String.format("%.2f km/L", avgKmL) : "N/A"),
+                createMiniStat("Total Fuel Spend", settingsService.getSettings().getCurrency() + " " + fuelService.calculateTotalFuelCost(vehicle.getId()).setScale(2))
+        );
+    }
+
+    private void refreshCostSummary() {
+        if (costTab != null) {
+            costTab.setContent(createCostSummaryTab());
+        }
     }
 
     private Node createMaintenanceTab() {
@@ -204,50 +266,70 @@ public class VehicleDetailView extends VBox {
             MaintenanceDialog dlg = new MaintenanceDialog(vehicle.getId(), null, maintenanceService);
             dlg.showAndWait().ifPresent(m -> {
                 refreshHeader();
-                tabPane.getTabs().set(1, new Tab("Maintenance", createMaintenanceTab()));
-                tabPane.getSelectionModel().select(1);
+                refreshMaintenance();
+                refreshCostSummary();
             });
         });
 
         top.getChildren().addAll(title, sp, addBtn);
         root.getChildren().add(top);
 
-        TableView<MaintenanceRecord> table = new TableView<>();
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        VBox.setVgrow(table, Priority.ALWAYS);
+        maintenanceTable = new TableView<>();
+        maintenanceTable.setPlaceholder(new Label("No maintenance records recorded yet."));
+        maintenanceTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        maintenanceTable.setMinHeight(250);
+        VBox.setVgrow(maintenanceTable, Priority.ALWAYS);
 
         TableColumn<MaintenanceRecord, String> dateCol = new TableColumn<>("Date");
-        dateCol.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getDate())));
+        dateCol.setCellValueFactory(d -> new SimpleStringProperty(DateUtil.format(d.getValue().getDate())));
+        dateCol.setMinWidth(110);
+        dateCol.setPrefWidth(120);
 
         TableColumn<MaintenanceRecord, String> odoCol = new TableColumn<>("Odometer");
         odoCol.setCellValueFactory(d -> new SimpleStringProperty(String.format("%,d", (int) d.getValue().getOdometer())));
+        odoCol.setMinWidth(110);
+        odoCol.setPrefWidth(120);
 
         TableColumn<MaintenanceRecord, String> workCol = new TableColumn<>("Work Done");
         workCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getWorkDone()));
+        workCol.setMinWidth(350);
+        workCol.setPrefWidth(450);
 
         String currency = settingsService.getSettings().getCurrency();
         TableColumn<MaintenanceRecord, String> costCol = new TableColumn<>("Cost");
         costCol.setCellValueFactory(d -> new SimpleStringProperty(currency + " " + d.getValue().getCost().setScale(2)));
+        costCol.setMinWidth(110);
+        costCol.setPrefWidth(120);
 
         TableColumn<MaintenanceRecord, String> shopCol = new TableColumn<>("Workshop");
         shopCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getWorkshop() != null ? d.getValue().getWorkshop() : "-"));
+        shopCol.setMinWidth(180);
+        shopCol.setPrefWidth(220);
 
         TableColumn<MaintenanceRecord, String> dueCol = new TableColumn<>("Next Due");
         dueCol.setCellValueFactory(d -> {
             MaintenanceRecord m = d.getValue();
             String s = "";
-            if (m.getNextServiceDueDate() != null) s += m.getNextServiceDueDate().toString();
+            if (m.getNextServiceDueDate() != null) s += DateUtil.format(m.getNextServiceDueDate());
             if (m.getNextServiceDueOdometer() != null) s += (s.isEmpty() ? "" : " / ") + String.format("%,d km", m.getNextServiceDueOdometer().intValue());
             return new SimpleStringProperty(s.isEmpty() ? "-" : s);
         });
+        dueCol.setMinWidth(180);
+        dueCol.setPrefWidth(220);
 
         TableColumn<MaintenanceRecord, Void> actionCol = new TableColumn<>("Actions");
+        actionCol.setMinWidth(160);
+        actionCol.setPrefWidth(160);
+        actionCol.setResizable(false);
         actionCol.setCellFactory(col -> new TableCell<>() {
             private final Button editB = new Button("Edit");
             private final Button delB = new Button("Delete");
-            private final HBox pane = new HBox(6, editB, delB);
+            private final HBox pane = new HBox(8, editB, delB);
 
             {
+                editB.setMinWidth(Region.USE_PREF_SIZE);
+                delB.setMinWidth(Region.USE_PREF_SIZE);
+                pane.setAlignment(Pos.CENTER_LEFT);
                 editB.getStyleClass().add("btn-secondary");
                 delB.getStyleClass().add("btn-danger");
                 editB.setOnAction(e -> {
@@ -256,8 +338,8 @@ public class VehicleDetailView extends VBox {
                         MaintenanceDialog dlg = new MaintenanceDialog(vehicle.getId(), rec, maintenanceService);
                         dlg.showAndWait().ifPresent(res -> {
                             refreshHeader();
-                            tabPane.getTabs().set(1, new Tab("Maintenance", createMaintenanceTab()));
-                            tabPane.getSelectionModel().select(1);
+                            refreshMaintenance();
+                            refreshCostSummary();
                         });
                     }
                 });
@@ -267,8 +349,9 @@ public class VehicleDetailView extends VBox {
                         Alert c = new Alert(Alert.AlertType.CONFIRMATION, "Delete this maintenance record?", ButtonType.YES, ButtonType.NO);
                         if (c.showAndWait().filter(b -> b == ButtonType.YES).isPresent()) {
                             maintenanceService.deleteRecord(rec.getId());
-                            tabPane.getTabs().set(1, new Tab("Maintenance", createMaintenanceTab()));
-                            tabPane.getSelectionModel().select(1);
+                            refreshHeader();
+                            refreshMaintenance();
+                            refreshCostSummary();
                         }
                     }
                 });
@@ -281,10 +364,10 @@ public class VehicleDetailView extends VBox {
             }
         });
 
-        table.getColumns().addAll(dateCol, odoCol, workCol, costCol, shopCol, dueCol, actionCol);
-        table.getItems().setAll(maintenanceService.getRecordsForVehicle(vehicle.getId()));
+        maintenanceTable.getColumns().addAll(dateCol, odoCol, workCol, costCol, shopCol, dueCol, actionCol);
+        maintenanceTable.getItems().setAll(maintenanceService.getRecordsForVehicle(vehicle.getId()));
 
-        root.getChildren().add(table);
+        root.getChildren().add(maintenanceTable);
         return root;
     }
 
@@ -305,38 +388,54 @@ public class VehicleDetailView extends VBox {
         addBtn.setOnAction(e -> {
             ExpenseDialog dlg = new ExpenseDialog(vehicle.getId(), null, expenseService);
             dlg.showAndWait().ifPresent(res -> {
-                tabPane.getTabs().set(2, new Tab("Expenses", createExpensesTab()));
-                tabPane.getSelectionModel().select(2);
+                refreshExpenses();
+                refreshCostSummary();
             });
         });
 
         top.getChildren().addAll(title, sp, addBtn);
         root.getChildren().add(top);
 
-        TableView<Expense> table = new TableView<>();
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        VBox.setVgrow(table, Priority.ALWAYS);
+        expenseTable = new TableView<>();
+        expenseTable.setPlaceholder(new Label("No expenses recorded yet."));
+        expenseTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        expenseTable.setMinHeight(250);
+        VBox.setVgrow(expenseTable, Priority.ALWAYS);
 
         TableColumn<Expense, String> dateCol = new TableColumn<>("Date");
-        dateCol.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getDate())));
+        dateCol.setCellValueFactory(d -> new SimpleStringProperty(DateUtil.format(d.getValue().getDate())));
+        dateCol.setMinWidth(110);
+        dateCol.setPrefWidth(120);
 
         TableColumn<Expense, String> catCol = new TableColumn<>("Category");
         catCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getCategory().getDisplayName()));
+        catCol.setMinWidth(160);
+        catCol.setPrefWidth(180);
 
         TableColumn<Expense, String> descCol = new TableColumn<>("Description");
         descCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getDescription()));
+        descCol.setMinWidth(300);
+        descCol.setPrefWidth(420);
 
         String currency = settingsService.getSettings().getCurrency();
         TableColumn<Expense, String> amtCol = new TableColumn<>("Amount");
         amtCol.setCellValueFactory(d -> new SimpleStringProperty(currency + " " + d.getValue().getAmount().setScale(2)));
+        amtCol.setMinWidth(120);
+        amtCol.setPrefWidth(140);
 
         TableColumn<Expense, Void> actionCol = new TableColumn<>("Actions");
+        actionCol.setMinWidth(160);
+        actionCol.setPrefWidth(160);
+        actionCol.setResizable(false);
         actionCol.setCellFactory(col -> new TableCell<>() {
             private final Button editB = new Button("Edit");
             private final Button delB = new Button("Delete");
-            private final HBox pane = new HBox(6, editB, delB);
+            private final HBox pane = new HBox(8, editB, delB);
 
             {
+                editB.setMinWidth(Region.USE_PREF_SIZE);
+                delB.setMinWidth(Region.USE_PREF_SIZE);
+                pane.setAlignment(Pos.CENTER_LEFT);
                 editB.getStyleClass().add("btn-secondary");
                 delB.getStyleClass().add("btn-danger");
                 editB.setOnAction(e -> {
@@ -344,8 +443,8 @@ public class VehicleDetailView extends VBox {
                     if (rec != null) {
                         ExpenseDialog dlg = new ExpenseDialog(vehicle.getId(), rec, expenseService);
                         dlg.showAndWait().ifPresent(res -> {
-                            tabPane.getTabs().set(2, new Tab("Expenses", createExpensesTab()));
-                            tabPane.getSelectionModel().select(2);
+                            refreshExpenses();
+                            refreshCostSummary();
                         });
                     }
                 });
@@ -355,8 +454,8 @@ public class VehicleDetailView extends VBox {
                         Alert c = new Alert(Alert.AlertType.CONFIRMATION, "Delete this expense?", ButtonType.YES, ButtonType.NO);
                         if (c.showAndWait().filter(b -> b == ButtonType.YES).isPresent()) {
                             expenseService.deleteExpense(rec.getId());
-                            tabPane.getTabs().set(2, new Tab("Expenses", createExpensesTab()));
-                            tabPane.getSelectionModel().select(2);
+                            refreshExpenses();
+                            refreshCostSummary();
                         }
                     }
                 });
@@ -369,10 +468,10 @@ public class VehicleDetailView extends VBox {
             }
         });
 
-        table.getColumns().addAll(dateCol, catCol, descCol, amtCol, actionCol);
-        table.getItems().setAll(expenseService.getExpensesForVehicle(vehicle.getId()));
+        expenseTable.getColumns().addAll(dateCol, catCol, descCol, amtCol, actionCol);
+        expenseTable.getItems().setAll(expenseService.getExpensesForVehicle(vehicle.getId()));
 
-        root.getChildren().add(table);
+        root.getChildren().add(expenseTable);
         return root;
     }
 
@@ -394,8 +493,8 @@ public class VehicleDetailView extends VBox {
             FuelDialog dlg = new FuelDialog(vehicle.getId(), null, fuelService, maintenanceService);
             dlg.showAndWait().ifPresent(res -> {
                 refreshHeader();
-                tabPane.getTabs().set(3, new Tab("Fuel", createFuelTab()));
-                tabPane.getSelectionModel().select(3);
+                refreshFuel();
+                refreshCostSummary();
             });
         });
 
@@ -403,53 +502,55 @@ public class VehicleDetailView extends VBox {
         root.getChildren().add(top);
 
         // Fuel Consumption Summary Card
-        List<FuelService.ConsumptionInterval> intervals = fuelService.calculateConsumptionHistory(vehicle.getId());
-        double avgL100 = 0;
-        double avgKmL = 0;
-        if (!intervals.isEmpty()) {
-            double totalDist = intervals.stream().mapToDouble(FuelService.ConsumptionInterval::distanceKm).sum();
-            double totalLitres = intervals.stream().mapToDouble(FuelService.ConsumptionInterval::litresConsumed).sum();
-            if (totalDist > 0 && totalLitres > 0) {
-                avgL100 = (totalLitres / totalDist) * 100.0;
-                avgKmL = totalDist / totalLitres;
-            }
-        }
+        fuelStatRow = new HBox(16);
+        updateFuelStats();
+        root.getChildren().add(fuelStatRow);
 
-        HBox statRow = new HBox(16);
-        statRow.getChildren().addAll(
-                createMiniStat("Average Consumption", avgL100 > 0 ? String.format("%.2f L/100 km", avgL100) : "N/A"),
-                createMiniStat("Fuel Efficiency", avgKmL > 0 ? String.format("%.2f km/L", avgKmL) : "N/A"),
-                createMiniStat("Total Fuel Spend", settingsService.getSettings().getCurrency() + " " + fuelService.calculateTotalFuelCost(vehicle.getId()).setScale(2))
-        );
-        root.getChildren().add(statRow);
-
-        TableView<FuelFillUp> table = new TableView<>();
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-        VBox.setVgrow(table, Priority.ALWAYS);
+        fuelTable = new TableView<>();
+        fuelTable.setPlaceholder(new Label("No fuel fill-ups recorded yet."));
+        fuelTable.setColumnResizePolicy(TableView.UNCONSTRAINED_RESIZE_POLICY);
+        fuelTable.setMinHeight(250);
+        VBox.setVgrow(fuelTable, Priority.ALWAYS);
 
         TableColumn<FuelFillUp, String> dateCol = new TableColumn<>("Date");
-        dateCol.setCellValueFactory(d -> new SimpleStringProperty(String.valueOf(d.getValue().getDate())));
+        dateCol.setCellValueFactory(d -> new SimpleStringProperty(DateUtil.format(d.getValue().getDate())));
+        dateCol.setMinWidth(110);
+        dateCol.setPrefWidth(120);
 
         TableColumn<FuelFillUp, String> odoCol = new TableColumn<>("Odometer");
         odoCol.setCellValueFactory(d -> new SimpleStringProperty(String.format("%,d", (int) d.getValue().getOdometer())));
+        odoCol.setMinWidth(110);
+        odoCol.setPrefWidth(130);
 
         TableColumn<FuelFillUp, String> litresCol = new TableColumn<>("Litres");
         litresCol.setCellValueFactory(d -> new SimpleStringProperty(String.format("%.1f L", d.getValue().getLitres())));
+        litresCol.setMinWidth(110);
+        litresCol.setPrefWidth(130);
 
         String currency = settingsService.getSettings().getCurrency();
         TableColumn<FuelFillUp, String> costCol = new TableColumn<>("Total Cost");
         costCol.setCellValueFactory(d -> new SimpleStringProperty(currency + " " + d.getValue().getTotalCost().setScale(2)));
+        costCol.setMinWidth(120);
+        costCol.setPrefWidth(140);
 
         TableColumn<FuelFillUp, String> fullCol = new TableColumn<>("Full Tank");
         fullCol.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().isFullTank() ? "Yes" : "Partial"));
+        fullCol.setMinWidth(110);
+        fullCol.setPrefWidth(120);
 
         TableColumn<FuelFillUp, Void> actionCol = new TableColumn<>("Actions");
+        actionCol.setMinWidth(160);
+        actionCol.setPrefWidth(160);
+        actionCol.setResizable(false);
         actionCol.setCellFactory(col -> new TableCell<>() {
             private final Button editB = new Button("Edit");
             private final Button delB = new Button("Delete");
-            private final HBox pane = new HBox(6, editB, delB);
+            private final HBox pane = new HBox(8, editB, delB);
 
             {
+                editB.setMinWidth(Region.USE_PREF_SIZE);
+                delB.setMinWidth(Region.USE_PREF_SIZE);
+                pane.setAlignment(Pos.CENTER_LEFT);
                 editB.getStyleClass().add("btn-secondary");
                 delB.getStyleClass().add("btn-danger");
                 editB.setOnAction(e -> {
@@ -458,8 +559,8 @@ public class VehicleDetailView extends VBox {
                         FuelDialog dlg = new FuelDialog(vehicle.getId(), rec, fuelService, maintenanceService);
                         dlg.showAndWait().ifPresent(res -> {
                             refreshHeader();
-                            tabPane.getTabs().set(3, new Tab("Fuel", createFuelTab()));
-                            tabPane.getSelectionModel().select(3);
+                            refreshFuel();
+                            refreshCostSummary();
                         });
                     }
                 });
@@ -469,8 +570,9 @@ public class VehicleDetailView extends VBox {
                         Alert c = new Alert(Alert.AlertType.CONFIRMATION, "Delete this fuel record?", ButtonType.YES, ButtonType.NO);
                         if (c.showAndWait().filter(b -> b == ButtonType.YES).isPresent()) {
                             fuelService.deleteFillUp(rec.getId());
-                            tabPane.getTabs().set(3, new Tab("Fuel", createFuelTab()));
-                            tabPane.getSelectionModel().select(3);
+                            refreshHeader();
+                            refreshFuel();
+                            refreshCostSummary();
                         }
                     }
                 });
@@ -483,10 +585,10 @@ public class VehicleDetailView extends VBox {
             }
         });
 
-        table.getColumns().addAll(dateCol, odoCol, litresCol, costCol, fullCol, actionCol);
-        table.getItems().setAll(fuelService.getFillUpsForVehicle(vehicle.getId()));
+        fuelTable.getColumns().addAll(dateCol, odoCol, litresCol, costCol, fullCol, actionCol);
+        fuelTable.getItems().setAll(fuelService.getFillUpsForVehicle(vehicle.getId()));
 
-        root.getChildren().add(table);
+        root.getChildren().add(fuelTable);
         return root;
     }
 

@@ -25,7 +25,11 @@ public final class JsonUtil {
                     if (json == null || json.isJsonNull() || json.getAsString().isBlank()) {
                         return null;
                     }
-                    return LocalDate.parse(json.getAsString(), DATE_FORMATTER);
+                    try {
+                        return DateUtil.parse(json.getAsString());
+                    } catch (Exception e) {
+                        throw new JsonParseException("Unable to parse date: " + json.getAsString(), e);
+                    }
                 }
             })
             .registerTypeAdapter(BigDecimal.class, new JsonSerializer<BigDecimal>() {

@@ -117,4 +117,16 @@ class VehicleServiceTest {
         List<Vehicle> vanOnly = vehicleService.searchAndFilter("", null, VehicleType.TRUCK_VAN, null, false, "plate", true);
         assertEquals(1, vanOnly.size());
     }
+
+    @Test
+    void testVehicleStringRepresentation() {
+        Vehicle v = createVehicle("H18", "Toyota", "Alphard", 2024);
+        v.setNickname("Alphard AGH40");
+        assertEquals("H18 · Toyota Alphard (Alphard AGH40)", v.toString());
+        assertEquals("Alphard AGH40 (H18)", v.getDisplayName());
+
+        Vehicle v2 = createVehicle("M18M", "Tesla", "Model 3", 2024);
+        assertEquals("M18M · Tesla Model 3", v2.toString());
+        assertEquals("Tesla Model 3 (M18M)", v2.getDisplayName());
+    }
 }

@@ -116,6 +116,7 @@ public class ReportsView extends ScrollPane {
         tcoTitle.setStyle("-fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #0F172A;");
 
         TableView<ReportService.VehicleTcoSummary> tcoTable = new TableView<>();
+        tcoTable.setPlaceholder(new Label("No vehicle data available for report."));
         tcoTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         tcoTable.setPrefHeight(220);
 

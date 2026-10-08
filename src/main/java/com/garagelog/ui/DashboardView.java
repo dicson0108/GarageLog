@@ -2,6 +2,7 @@ package com.garagelog.ui;
 
 import com.garagelog.model.*;
 import com.garagelog.service.*;
+import com.garagelog.util.DateUtil;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -162,9 +163,14 @@ public class DashboardView extends ScrollPane {
         remindersBox.getStyleClass().add("card");
         HBox.setHgrow(remindersBox, Priority.ALWAYS);
 
-        Label remindersHeader = new Label("Needs your attention");
+        Label remindersHeader = new Label("Needs your attention (" + reminders.size() + ")");
         remindersHeader.setStyle("-fx-font-size: 16px; -fx-font-weight: bold; -fx-text-fill: #0F172A;");
-        Label remindersSub = new Label("Reminders use your " + settings.getReminderLeadDays() + "-day / " + settings.getReminderLeadKm() + "-" + settings.getDistanceUnit() + " lead time.");
+        Label remindersSub;
+        if (reminders.size() > 3) {
+            remindersSub = new Label(reminders.size() + " items needing action · Showing 3 at once (scroll to view all)");
+        } else {
+            remindersSub = new Label("Reminders use your " + settings.getReminderLeadDays() + "-day / " + settings.getReminderLeadKm() + "-" + settings.getDistanceUnit() + " lead time.");
+        }
         remindersSub.getStyleClass().add("card-metric-subtext");
         remindersBox.getChildren().addAll(remindersHeader, remindersSub);
 
@@ -174,10 +180,21 @@ public class DashboardView extends ScrollPane {
             remindersBox.getChildren().add(allClear);
         } else {
             VBox reminderList = new VBox(10);
+            reminderList.setPadding(new Insets(2, 6, 2, 2));
             for (ReminderService.ReminderItem item : reminders) {
                 reminderList.getChildren().add(createReminderCard(item));
             }
-            remindersBox.getChildren().add(reminderList);
+
+            ScrollPane reminderScrollPane = new ScrollPane(reminderList);
+            reminderScrollPane.setFitToWidth(true);
+            reminderScrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+            reminderScrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+            reminderScrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent; -fx-border-color: transparent;");
+            double targetHeight = Math.min(348, Math.max(108, reminders.size() * 118));
+            reminderScrollPane.setPrefHeight(targetHeight);
+            reminderScrollPane.setMaxHeight(348);
+
+            remindersBox.getChildren().add(reminderScrollPane);
         }
 
         // Right Column: Quick entry & Recent spending
@@ -287,8 +304,11 @@ public class DashboardView extends ScrollPane {
     }
 
     private Node createReminderCard(ReminderService.ReminderItem item) {
-        VBox box = new VBox(6);
-        box.setStyle("-fx-background-color: #FAFAFA; -fx-border-color: #E2E8F0; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 12;");
+        VBox box = new VBox(5);
+        box.setStyle("-fx-background-color: #FAFAFA; -fx-border-color: #E2E8F0; -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 10 12;");
+        box.setMinHeight(108);
+        box.setPrefHeight(108);
+        box.setMaxHeight(108);
 
         HBox top = new HBox(8);
         top.setAlignment(Pos.CENTER_LEFT);
@@ -314,7 +334,7 @@ public class DashboardView extends ScrollPane {
 
         HBox actions = new HBox(10);
         actions.setAlignment(Pos.CENTER_LEFT);
-        actions.setStyle("-fx-padding: 6 0 0 0;");
+        actions.setStyle("-fx-padding: 4 0 0 0;");
 
         Button snoozeBtn = new Button("⏱ Snooze 7 days");
         snoozeBtn.getStyleClass().add("btn-secondary");
@@ -357,10 +377,11 @@ public class DashboardView extends ScrollPane {
         return sum;
     }
 
-    public record ActivityRow(String date, String vehiclePlate, String record, String amount) {}
+    public record ActivityRow(LocalDate rawDate, String date, String vehiclePlate, String record, String amount) {}
 
     private TableView<ActivityRow> createActivityTable() {
         TableView<ActivityRow> table = new TableView<>();
+        table.setPlaceholder(new Label("No recent activities."));
         table.setPrefHeight(180);
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
 
@@ -388,20 +409,20 @@ public class DashboardView extends ScrollPane {
         for (MaintenanceRecord m : vehicleService.getAppData().getMaintenanceRecords()) {
             String plate = vehicleService.findById(m.getVehicleId()).map(Vehicle::getPlateNumber).orElse("Unknown");
             String cost = m.getCost() != null ? currency + " " + m.getCost().setScale(2) : "-";
-            rows.add(new ActivityRow(String.valueOf(m.getDate()), plate, "Maintenance · " + m.getWorkDone(), cost));
+            rows.add(new ActivityRow(m.getDate(), DateUtil.format(m.getDate()), plate, "Maintenance · " + m.getWorkDone(), cost));
         }
         for (Expense exp : vehicleService.getAppData().getExpenses()) {
             String plate = vehicleService.findById(exp.getVehicleId()).map(Vehicle::getPlateNumber).orElse("Unknown");
             String cost = exp.getAmount() != null ? currency + " " + exp.getAmount().setScale(2) : "-";
-            rows.add(new ActivityRow(String.valueOf(exp.getDate()), plate, "Expense · " + exp.getDescription(), cost));
+            rows.add(new ActivityRow(exp.getDate(), DateUtil.format(exp.getDate()), plate, "Expense · " + exp.getDescription(), cost));
         }
         for (FuelFillUp f : vehicleService.getAppData().getFuelFillUps()) {
             String plate = vehicleService.findById(f.getVehicleId()).map(Vehicle::getPlateNumber).orElse("Unknown");
             String cost = f.getTotalCost() != null ? currency + " " + f.getTotalCost().setScale(2) : "-";
-            rows.add(new ActivityRow(String.valueOf(f.getDate()), plate, "Fuel · " + (f.isFullTank() ? "Full tank" : "Partial fill"), cost));
+            rows.add(new ActivityRow(f.getDate(), DateUtil.format(f.getDate()), plate, "Fuel · " + (f.isFullTank() ? "Full tank" : "Partial fill"), cost));
         }
 
-        rows.sort(Comparator.comparing(ActivityRow::date, Comparator.reverseOrder()));
+        rows.sort(Comparator.comparing(ActivityRow::rawDate, Comparator.nullsLast(Comparator.reverseOrder())));
         table.getItems().addAll(rows.stream().limit(8).toList());
 
         return table;

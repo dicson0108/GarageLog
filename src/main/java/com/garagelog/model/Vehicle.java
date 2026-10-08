@@ -180,8 +180,25 @@ public class Vehicle {
 
     public String getDisplayName() {
         if (nickname != null && !nickname.isBlank()) {
-            return nickname + " (" + plateNumber + ")";
+            return nickname + (plateNumber != null && !plateNumber.isBlank() ? " (" + plateNumber + ")" : "");
         }
-        return (brand != null ? brand : "") + " " + (model != null ? model : "") + " (" + plateNumber + ")";
+        String makeModel = ((brand != null ? brand : "") + " " + (model != null ? model : "")).trim();
+        if (!makeModel.isEmpty()) {
+            return makeModel + (plateNumber != null && !plateNumber.isBlank() ? " (" + plateNumber + ")" : "");
+        }
+        return plateNumber != null ? plateNumber : "Vehicle";
+    }
+
+    @Override
+    public String toString() {
+        String makeModel = ((brand != null ? brand : "") + " " + (model != null ? model : "")).trim();
+        String plate = plateNumber != null ? plateNumber : "";
+        if (nickname != null && !nickname.isBlank()) {
+            if (!makeModel.isEmpty() && !nickname.equalsIgnoreCase(makeModel)) {
+                return plate + (plate.isEmpty() ? "" : " · ") + makeModel + " (" + nickname + ")";
+            }
+            return plate + (plate.isEmpty() ? "" : " · ") + nickname;
+        }
+        return plate + (plate.isEmpty() ? "" : " · ") + (!makeModel.isEmpty() ? makeModel : "Vehicle");
     }
 }

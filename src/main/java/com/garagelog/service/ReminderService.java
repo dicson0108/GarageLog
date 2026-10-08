@@ -4,6 +4,7 @@ import com.garagelog.model.MaintenanceRecord;
 import com.garagelog.model.Settings;
 import com.garagelog.model.Vehicle;
 import com.garagelog.model.VehicleStatus;
+import com.garagelog.util.DateUtil;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -73,7 +74,7 @@ public class ReminderService {
                                 reminderId, v.getId(), v.getPlateNumber(), v.getDisplayName(),
                                 ReminderType.INSURANCE, ReminderSeverity.OVERDUE,
                                 "Insurance expired",
-                                "Expired on " + expiry + " · " + Math.abs(daysDiff) + " days overdue",
+                                "Expired on " + DateUtil.format(expiry) + " · " + Math.abs(daysDiff) + " days overdue",
                                 expiry, null, daysDiff, 0
                         ));
                     } else if (daysDiff <= leadDays) {
@@ -81,7 +82,7 @@ public class ReminderService {
                                 reminderId, v.getId(), v.getPlateNumber(), v.getDisplayName(),
                                 ReminderType.INSURANCE, ReminderSeverity.UPCOMING,
                                 "Insurance expires soon",
-                                "Expires " + expiry + " · " + daysDiff + " days remaining",
+                                "Expires " + DateUtil.format(expiry) + " · " + daysDiff + " days remaining",
                                 expiry, null, daysDiff, 0
                         ));
                     }
@@ -99,7 +100,7 @@ public class ReminderService {
                                 reminderId, v.getId(), v.getPlateNumber(), v.getDisplayName(),
                                 ReminderType.ROAD_TAX, ReminderSeverity.OVERDUE,
                                 "Road tax expired",
-                                "Expired on " + expiry + " · " + Math.abs(daysDiff) + " days overdue",
+                                "Expired on " + DateUtil.format(expiry) + " · " + Math.abs(daysDiff) + " days overdue",
                                 expiry, null, daysDiff, 0
                         ));
                     } else if (daysDiff <= leadDays) {
@@ -107,7 +108,7 @@ public class ReminderService {
                                 reminderId, v.getId(), v.getPlateNumber(), v.getDisplayName(),
                                 ReminderType.ROAD_TAX, ReminderSeverity.UPCOMING,
                                 "Road tax renewal",
-                                "Expires " + expiry + " · " + daysDiff + " days remaining",
+                                "Expires " + DateUtil.format(expiry) + " · " + daysDiff + " days remaining",
                                 expiry, null, daysDiff, 0
                         ));
                     }
@@ -123,10 +124,10 @@ public class ReminderService {
                         long daysDiff = ChronoUnit.DAYS.between(today, due);
                         if (daysDiff < 0) {
                             items.add(new ReminderItem(
-                                    reminderId, v.getId(), v.getPlateNumber(), v.getDisplayName(),
+                                     reminderId, v.getId(), v.getPlateNumber(), v.getDisplayName(),
                                     ReminderType.MAINTENANCE_DATE, ReminderSeverity.OVERDUE,
                                     "Service overdue",
-                                    "Due " + due + " · " + Math.abs(daysDiff) + " days overdue",
+                                    "Due " + DateUtil.format(due) + " · " + Math.abs(daysDiff) + " days overdue",
                                     due, null, daysDiff, 0
                             ));
                         } else if (daysDiff <= leadDays) {
@@ -134,7 +135,7 @@ public class ReminderService {
                                     reminderId, v.getId(), v.getPlateNumber(), v.getDisplayName(),
                                     ReminderType.MAINTENANCE_DATE, ReminderSeverity.UPCOMING,
                                     "Service approaching",
-                                    "Due " + due + " · " + daysDiff + " days remaining",
+                                    "Due " + DateUtil.format(due) + " · " + daysDiff + " days remaining",
                                     due, null, daysDiff, 0
                             ));
                         }
