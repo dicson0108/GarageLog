@@ -5,7 +5,7 @@ import com.garagelog.exception.VehicleNotFoundException;
 import com.garagelog.model.AppData;
 import com.garagelog.model.FuelFillUp;
 import com.garagelog.model.Vehicle;
-import com.garagelog.repository.GarageRepository;
+import com.garagelog.repository.JsonGarageRepository;
 import com.garagelog.util.ValidationUtil;
 
 import java.math.BigDecimal;
@@ -13,10 +13,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class FuelService {
-    private final GarageRepository repository;
+    private final JsonGarageRepository repository;
     private final VehicleService vehicleService;
 
-    public FuelService(GarageRepository repository, VehicleService vehicleService) {
+    public FuelService(JsonGarageRepository repository, VehicleService vehicleService) {
         this.repository = repository;
         this.vehicleService = vehicleService;
     }

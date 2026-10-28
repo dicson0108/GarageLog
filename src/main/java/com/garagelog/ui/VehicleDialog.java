@@ -6,20 +6,13 @@ import com.garagelog.util.DateUtil;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class VehicleDialog extends Dialog<Vehicle> {
-    private final Vehicle vehicleToEdit;
-    private final VehicleService vehicleService;
-
     public VehicleDialog(Vehicle existingVehicle, VehicleService vehicleService) {
-        this.vehicleToEdit = existingVehicle;
-        this.vehicleService = vehicleService;
-
         setTitle(existingVehicle == null ? "Add Vehicle" : "Edit Vehicle — " + existingVehicle.getPlateNumber());
         setHeaderText(existingVehicle == null ? "Enter vehicle details" : "Update vehicle details");
 
@@ -147,7 +140,7 @@ public class VehicleDialog extends Dialog<Vehicle> {
 
         saveBtn.addEventFilter(javafx.event.ActionEvent.ACTION, event -> {
             try {
-                Vehicle target = vehicleToEdit != null ? vehicleToEdit : new Vehicle();
+                Vehicle target = existingVehicle != null ? existingVehicle : new Vehicle();
                 target.setPlateNumber(plateField.getText().trim());
                 target.setNickname(nicknameField.getText().trim());
                 target.setBrand(brandField.getText().trim());
@@ -176,7 +169,7 @@ public class VehicleDialog extends Dialog<Vehicle> {
                 target.setRoadTaxExpiryDate(roadTaxDatePicker.getValue());
                 target.setNotes(notesArea.getText().trim());
 
-                if (vehicleToEdit == null) {
+                if (existingVehicle == null) {
                     vehicleService.addVehicle(target);
                 } else {
                     vehicleService.updateVehicle(target);
@@ -190,7 +183,7 @@ public class VehicleDialog extends Dialog<Vehicle> {
 
         setResultConverter(dialogButton -> {
             if (dialogButton == saveButtonType) {
-                return vehicleToEdit;
+                return existingVehicle;
             }
             return null;
         });

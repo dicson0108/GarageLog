@@ -1,6 +1,6 @@
 package com.garagelog.ui;
 
-import com.garagelog.repository.GarageRepository;
+import com.garagelog.repository.JsonGarageRepository;
 import com.garagelog.service.VehicleService;
 import com.garagelog.util.CsvUtil;
 import javafx.beans.property.SimpleStringProperty;
@@ -14,19 +14,18 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class DataView extends ScrollPane {
-    private final GarageRepository repository;
+    private final JsonGarageRepository repository;
     private final VehicleService vehicleService;
     private final NavigationListener navListener;
 
     private TableView<Path> backupTable;
 
-    public DataView(GarageRepository repository, VehicleService vehicleService, NavigationListener navListener) {
+    public DataView(JsonGarageRepository repository, VehicleService vehicleService, NavigationListener navListener) {
         this.repository = repository;
         this.vehicleService = vehicleService;
         this.navListener = navListener;

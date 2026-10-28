@@ -22,10 +22,6 @@ public class MaintenanceRecord {
         this.id = UUID.randomUUID();
     }
 
-    public MaintenanceRecord(UUID id) {
-        this.id = id != null ? id : UUID.randomUUID();
-    }
-
     public UUID getId() {
         return id;
     }

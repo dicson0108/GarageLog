@@ -4,8 +4,7 @@ import com.garagelog.exception.ValidationException;
 import com.garagelog.exception.VehicleNotFoundException;
 import com.garagelog.model.AppData;
 import com.garagelog.model.Expense;
-import com.garagelog.model.ExpenseCategory;
-import com.garagelog.repository.GarageRepository;
+import com.garagelog.repository.JsonGarageRepository;
 import com.garagelog.util.ValidationUtil;
 
 import java.math.BigDecimal;
@@ -13,10 +12,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class ExpenseService {
-    private final GarageRepository repository;
+    private final JsonGarageRepository repository;
     private final VehicleService vehicleService;
 
-    public ExpenseService(GarageRepository repository, VehicleService vehicleService) {
+    public ExpenseService(JsonGarageRepository repository, VehicleService vehicleService) {
         this.repository = repository;
         this.vehicleService = vehicleService;
     }
@@ -77,10 +76,9 @@ public class ExpenseService {
         repository.save(getAppData());
     }
 
-    public synchronized BigDecimal calculateTotalExpenses(UUID vehicleId, ExpenseCategory category) {
+    public synchronized BigDecimal calculateTotalExpenses(UUID vehicleId) {
         return getAppData().getExpenses().stream()
                 .filter(e -> vehicleId == null || vehicleId.equals(e.getVehicleId()))
-                .filter(e -> category == null || category.equals(e.getCategory()))
                 .map(Expense::getAmount)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

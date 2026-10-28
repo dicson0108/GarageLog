@@ -5,17 +5,17 @@ import com.garagelog.exception.VehicleNotFoundException;
 import com.garagelog.model.AppData;
 import com.garagelog.model.MaintenanceRecord;
 import com.garagelog.model.Vehicle;
-import com.garagelog.repository.GarageRepository;
+import com.garagelog.repository.JsonGarageRepository;
 import com.garagelog.util.ValidationUtil;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class MaintenanceService {
-    private final GarageRepository repository;
+    private final JsonGarageRepository repository;
     private final VehicleService vehicleService;
 
-    public MaintenanceService(GarageRepository repository, VehicleService vehicleService) {
+    public MaintenanceService(JsonGarageRepository repository, VehicleService vehicleService) {
         this.repository = repository;
         this.vehicleService = vehicleService;
     }

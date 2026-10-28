@@ -3,7 +3,6 @@ package com.garagelog.service;
 import com.garagelog.model.MaintenanceRecord;
 import com.garagelog.model.Settings;
 import com.garagelog.model.Vehicle;
-import com.garagelog.model.VehicleStatus;
 import com.garagelog.util.DateUtil;
 
 import java.time.LocalDate;
@@ -59,10 +58,6 @@ public class ReminderService {
         List<ReminderItem> items = new ArrayList<>();
 
         for (Vehicle v : vehicleService.getAllVehicles(false)) {
-            if (v.getStatus() == VehicleStatus.SOLD) {
-                continue;
-            }
-
             // Insurance reminder
             if (v.getInsuranceExpiryDate() != null) {
                 String reminderId = "INSURANCE-" + v.getId();

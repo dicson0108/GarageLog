@@ -18,10 +18,6 @@ public class FuelFillUp {
         this.id = UUID.randomUUID();
     }
 
-    public FuelFillUp(UUID id) {
-        this.id = id != null ? id : UUID.randomUUID();
-    }
-
     public UUID getId() {
         return id;
     }

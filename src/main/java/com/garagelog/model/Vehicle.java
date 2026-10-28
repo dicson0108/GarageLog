@@ -31,13 +31,6 @@ public class Vehicle {
         this.fuelType = FuelType.PETROL;
     }
 
-    public Vehicle(UUID id) {
-        this.id = id != null ? id : UUID.randomUUID();
-        this.type = VehicleType.CAR;
-        this.status = VehicleStatus.ACTIVE;
-        this.fuelType = FuelType.PETROL;
-    }
-
     public UUID getId() {
         return id;
     }

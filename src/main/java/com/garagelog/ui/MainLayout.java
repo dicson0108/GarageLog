@@ -2,7 +2,7 @@ package com.garagelog.ui;
 
 import com.garagelog.model.Settings;
 import com.garagelog.model.Vehicle;
-import com.garagelog.repository.GarageRepository;
+import com.garagelog.repository.JsonGarageRepository;
 import com.garagelog.service.*;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -11,7 +11,6 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.*;
-import javafx.stage.Stage;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,8 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class MainLayout extends BorderPane implements NavigationListener {
-    private final Stage stage;
-    private final GarageRepository repository;
+    private final JsonGarageRepository repository;
     private final VehicleService vehicleService;
     private final MaintenanceService maintenanceService;
     private final ExpenseService expenseService;
@@ -48,11 +46,10 @@ public class MainLayout extends BorderPane implements NavigationListener {
     private ActiveSection currentSection = ActiveSection.DASHBOARD;
     private Vehicle currentDetailVehicle = null;
 
-    public MainLayout(Stage stage, GarageRepository repository, VehicleService vehicleService,
+    public MainLayout(JsonGarageRepository repository, VehicleService vehicleService,
                       MaintenanceService maintenanceService, ExpenseService expenseService,
                       FuelService fuelService, ReportService reportService,
                       ReminderService reminderService, SettingsService settingsService) {
-        this.stage = stage;
         this.repository = repository;
         this.vehicleService = vehicleService;
         this.maintenanceService = maintenanceService;
@@ -192,12 +189,11 @@ public class MainLayout extends BorderPane implements NavigationListener {
         }
     }
 
-    @Override
-    public void navigateToDashboard() {
+    private void navigateToDashboard() {
         currentSection = ActiveSection.DASHBOARD;
         setActiveNavButton(btnNavDashboard);
         contentArea.getChildren().setAll(new DashboardView(
-                vehicleService, maintenanceService, expenseService, fuelService,
+                vehicleService, maintenanceService, expenseService, fuelService, reportService,
                 reminderService, settingsService, this
         ));
     }
@@ -225,20 +221,17 @@ public class MainLayout extends BorderPane implements NavigationListener {
         currentSection = ActiveSection.REPORTS;
         setActiveNavButton(btnNavReports);
         contentArea.getChildren().setAll(new ReportsView(
-                vehicleService, maintenanceService, expenseService, fuelService,
-                reportService, settingsService, this
+                vehicleService, reportService, settingsService
         ));
     }
 
-    @Override
-    public void navigateToData() {
+    private void navigateToData() {
         currentSection = ActiveSection.DATA;
         setActiveNavButton(btnNavData);
         contentArea.getChildren().setAll(new DataView(repository, vehicleService, this));
     }
 
-    @Override
-    public void navigateToSettings() {
+    private void navigateToSettings() {
         currentSection = ActiveSection.SETTINGS;
         setActiveNavButton(btnNavSettings);
         contentArea.getChildren().setAll(new SettingsView(settingsService, this));

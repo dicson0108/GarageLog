@@ -20,11 +20,6 @@ public class Expense {
         this.category = ExpenseCategory.OTHER;
     }
 
-    public Expense(UUID id) {
-        this.id = id != null ? id : UUID.randomUUID();
-        this.category = ExpenseCategory.OTHER;
-    }
-
     public UUID getId() {
         return id;
     }

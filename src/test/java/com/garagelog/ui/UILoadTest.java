@@ -7,7 +7,6 @@ import javafx.application.Platform;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
@@ -66,20 +65,17 @@ class UILoadTest {
 
         runOnFx(() -> {
             NavigationListener dummy = new NavigationListener() {
-                @Override public void navigateToDashboard() {}
                 @Override public void navigateToVehicles() {}
                 @Override public void navigateToVehicleDetail(com.garagelog.model.Vehicle vehicle) {}
                 @Override public void navigateToReports() {}
-                @Override public void navigateToData() {}
-                @Override public void navigateToSettings() {}
                 @Override public void refreshAll() {}
             };
 
-            new DashboardView(vehicleService, maintenanceService, expenseService, fuelService, reminderService, settingsService, dummy);
+            new DashboardView(vehicleService, maintenanceService, expenseService, fuelService, reportService, reminderService, settingsService, dummy);
             new VehiclesView(vehicleService, dummy);
             var v = vehicleService.getAllVehicles(false).get(0);
             new VehicleDetailView(v, vehicleService, maintenanceService, expenseService, fuelService, reportService, settingsService, dummy);
-            new ReportsView(vehicleService, maintenanceService, expenseService, fuelService, reportService, settingsService, dummy);
+            new ReportsView(vehicleService, reportService, settingsService);
             new DataView(repository, vehicleService, dummy);
             new SettingsView(settingsService, dummy);
         });
@@ -120,16 +116,13 @@ class UILoadTest {
 
         runOnFx(() -> {
             NavigationListener dummy = new NavigationListener() {
-                @Override public void navigateToDashboard() {}
                 @Override public void navigateToVehicles() {}
                 @Override public void navigateToVehicleDetail(com.garagelog.model.Vehicle vehicle) {}
                 @Override public void navigateToReports() {}
-                @Override public void navigateToData() {}
-                @Override public void navigateToSettings() {}
                 @Override public void refreshAll() {}
             };
 
-            new DashboardView(vehicleService, maintenanceService, expenseService, fuelService, reminderService, settingsService, dummy);
+            new DashboardView(vehicleService, maintenanceService, expenseService, fuelService, reportService, reminderService, settingsService, dummy);
         });
     }
 }

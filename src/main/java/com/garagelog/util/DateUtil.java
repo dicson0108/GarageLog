@@ -53,14 +53,11 @@ public final class DateUtil {
         return new StringConverter<>() {
             @Override
             public String toString(LocalDate date) {
-                return date != null ? date.format(UI_FORMATTER) : "";
+                return formatOrEmpty(date);
             }
 
             @Override
             public LocalDate fromString(String string) {
-                if (string == null || string.trim().isEmpty()) {
-                    return null;
-                }
                 try {
                     return DateUtil.parse(string);
                 } catch (Exception e) {

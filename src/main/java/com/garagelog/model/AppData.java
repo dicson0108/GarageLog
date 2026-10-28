@@ -40,19 +40,11 @@ public class AppData {
         return vehicles;
     }
 
-    public void setVehicles(List<Vehicle> vehicles) {
-        this.vehicles = vehicles != null ? vehicles : new ArrayList<>();
-    }
-
     public List<MaintenanceRecord> getMaintenanceRecords() {
         if (maintenanceRecords == null) {
             maintenanceRecords = new ArrayList<>();
         }
         return maintenanceRecords;
-    }
-
-    public void setMaintenanceRecords(List<MaintenanceRecord> maintenanceRecords) {
-        this.maintenanceRecords = maintenanceRecords != null ? maintenanceRecords : new ArrayList<>();
     }
 
     public List<Expense> getExpenses() {
@@ -62,18 +54,10 @@ public class AppData {
         return expenses;
     }
 
-    public void setExpenses(List<Expense> expenses) {
-        this.expenses = expenses != null ? expenses : new ArrayList<>();
-    }
-
     public List<FuelFillUp> getFuelFillUps() {
         if (fuelFillUps == null) {
             fuelFillUps = new ArrayList<>();
         }
         return fuelFillUps;
-    }
-
-    public void setFuelFillUps(List<FuelFillUp> fuelFillUps) {
-        this.fuelFillUps = fuelFillUps != null ? fuelFillUps : new ArrayList<>();
     }
 }

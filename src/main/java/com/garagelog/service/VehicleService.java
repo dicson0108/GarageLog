@@ -3,7 +3,7 @@ package com.garagelog.service;
 import com.garagelog.exception.DuplicatePlateException;
 import com.garagelog.exception.VehicleNotFoundException;
 import com.garagelog.model.*;
-import com.garagelog.repository.GarageRepository;
+import com.garagelog.repository.JsonGarageRepository;
 import com.garagelog.util.PlateNormalizer;
 import com.garagelog.util.ValidationUtil;
 
@@ -11,10 +11,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class VehicleService {
-    private final GarageRepository repository;
+    private final JsonGarageRepository repository;
     private AppData appData;
 
-    public VehicleService(GarageRepository repository) {
+    public VehicleService(JsonGarageRepository repository) {
         this.repository = repository;
         this.appData = repository.load();
     }

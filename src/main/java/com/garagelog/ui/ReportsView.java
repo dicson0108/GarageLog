@@ -4,7 +4,6 @@ import com.garagelog.model.*;
 import com.garagelog.service.*;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.geometry.Insets;
-import javafx.geometry.Pos;
 import javafx.scene.chart.BarChart;
 import javafx.scene.chart.CategoryAxis;
 import javafx.scene.chart.NumberAxis;
@@ -13,29 +12,17 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 
 import java.math.BigDecimal;
-import java.time.YearMonth;
 import java.util.*;
 
 public class ReportsView extends ScrollPane {
     private final VehicleService vehicleService;
-    private final MaintenanceService maintenanceService;
-    private final ExpenseService expenseService;
-    private final FuelService fuelService;
     private final ReportService reportService;
     private final SettingsService settingsService;
-    private final NavigationListener navListener;
 
-    public ReportsView(VehicleService vehicleService, MaintenanceService maintenanceService,
-                       ExpenseService expenseService, FuelService fuelService,
-                       ReportService reportService, SettingsService settingsService,
-                       NavigationListener navListener) {
+    public ReportsView(VehicleService vehicleService, ReportService reportService, SettingsService settingsService) {
         this.vehicleService = vehicleService;
-        this.maintenanceService = maintenanceService;
-        this.expenseService = expenseService;
-        this.fuelService = fuelService;
         this.reportService = reportService;
         this.settingsService = settingsService;
-        this.navListener = navListener;
 
         setFitToWidth(true);
         setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");

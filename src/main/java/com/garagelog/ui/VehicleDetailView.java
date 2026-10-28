@@ -12,7 +12,6 @@ import javafx.scene.layout.*;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
 
 public class VehicleDetailView extends VBox {
     private final Vehicle vehicle;

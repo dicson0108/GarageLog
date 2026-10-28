@@ -2,13 +2,13 @@ package com.garagelog.service;
 
 import com.garagelog.model.AppData;
 import com.garagelog.model.Settings;
-import com.garagelog.repository.GarageRepository;
+import com.garagelog.repository.JsonGarageRepository;
 
 public class SettingsService {
-    private final GarageRepository repository;
+    private final JsonGarageRepository repository;
     private final VehicleService vehicleService;
 
-    public SettingsService(GarageRepository repository, VehicleService vehicleService) {
+    public SettingsService(JsonGarageRepository repository, VehicleService vehicleService) {
         this.repository = repository;
         this.vehicleService = vehicleService;
     }

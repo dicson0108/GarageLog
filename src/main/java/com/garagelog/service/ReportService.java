@@ -49,10 +49,7 @@ public class ReportService {
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal expenseSum = expenseService.getExpensesForVehicle(vehicleId).stream()
-                .map(Expense::getAmount)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal expenseSum = expenseService.calculateTotalExpenses(vehicleId);
 
         BigDecimal fuelSum = fuelService.calculateTotalFuelCost(vehicleId);
 

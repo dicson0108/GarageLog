@@ -12,14 +12,6 @@ public class Settings {
     public Settings() {
     }
 
-    public Settings(String currency, String distanceUnit, int reminderLeadDays, int reminderLeadKm, BigDecimal monthlyBudget) {
-        this.currency = currency;
-        this.distanceUnit = distanceUnit;
-        this.reminderLeadDays = reminderLeadDays;
-        this.reminderLeadKm = reminderLeadKm;
-        this.monthlyBudget = monthlyBudget;
-    }
-
     public String getCurrency() {
         return currency;
     }

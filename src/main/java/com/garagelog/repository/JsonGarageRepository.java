@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class JsonGarageRepository implements GarageRepository {
+public class JsonGarageRepository {
     private static final String DEFAULT_FILE_NAME = "garagelog.json";
     private static final String BACKUP_DIR_NAME = "backups";
     private static final int MAX_BACKUPS = 10;
@@ -45,12 +45,10 @@ public class JsonGarageRepository implements GarageRepository {
         }
     }
 
-    @Override
     public Path getDataFilePath() {
         return dataFilePath;
     }
 
-    @Override
     public AppData load() {
         if (!Files.exists(dataFilePath)) {
             AppData initial = new AppData();
@@ -60,7 +58,7 @@ public class JsonGarageRepository implements GarageRepository {
 
         try {
             String json = Files.readString(dataFilePath, StandardCharsets.UTF_8);
-            if (json == null || json.trim().isEmpty()) {
+            if (json.trim().isEmpty()) {
                 return new AppData();
             }
             AppData appData = JsonUtil.getGson().fromJson(json, AppData.class);
@@ -83,7 +81,6 @@ public class JsonGarageRepository implements GarageRepository {
         }
     }
 
-    @Override
     public synchronized void save(AppData data) {
         if (data == null) {
             throw new IllegalArgumentException("Cannot save null AppData.");
@@ -109,7 +106,6 @@ public class JsonGarageRepository implements GarageRepository {
         }
     }
 
-    @Override
     public synchronized Path createBackup() {
         if (!Files.exists(dataFilePath)) {
             return null;
@@ -127,21 +123,15 @@ public class JsonGarageRepository implements GarageRepository {
     }
 
     private void pruneBackups() {
-        try (Stream<Path> stream = Files.list(backupDirectory)) {
-            List<Path> backups = stream
-                    .filter(p -> p.getFileName().toString().startsWith("garagelog-backup-") && p.toString().endsWith(".json"))
-                    .sorted(Comparator.comparing(this::getCreationTimeSafely).reversed())
-                    .toList();
-
-            if (backups.size() > MAX_BACKUPS) {
-                for (int i = MAX_BACKUPS; i < backups.size(); i++) {
-                    try {
-                        Files.deleteIfExists(backups.get(i));
-                    } catch (IOException ignored) {
-                    }
+        try {
+            List<Path> backups = listBackups();
+            for (int i = MAX_BACKUPS; i < backups.size(); i++) {
+                try {
+                    Files.deleteIfExists(backups.get(i));
+                } catch (IOException ignored) {
                 }
             }
-        } catch (IOException e) {
+        } catch (StorageException e) {
             // Non-fatal warning
         }
     }
@@ -154,7 +144,6 @@ public class JsonGarageRepository implements GarageRepository {
         }
     }
 
-    @Override
     public List<Path> listBackups() {
         try (Stream<Path> stream = Files.list(backupDirectory)) {
             return stream
@@ -166,7 +155,6 @@ public class JsonGarageRepository implements GarageRepository {
         }
     }
 
-    @Override
     public synchronized AppData restoreBackup(Path backupPath) {
         if (!Files.exists(backupPath)) {
             throw new StorageException("Backup file does not exist: " + backupPath);

@@ -1,12 +1,10 @@
 package com.garagelog.ui;
 
-import com.garagelog.repository.GarageRepository;
 import com.garagelog.repository.JsonGarageRepository;
 import com.garagelog.service.*;
 import com.garagelog.util.SampleDataGenerator;
 import javafx.application.Application;
 import javafx.scene.Scene;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 public class GarageLogApp extends Application {
@@ -14,7 +12,7 @@ public class GarageLogApp extends Application {
     @Override
     public void start(Stage primaryStage) {
         // 1. Storage & Startup Backup
-        GarageRepository repository = new JsonGarageRepository();
+        JsonGarageRepository repository = new JsonGarageRepository();
         try {
             repository.createBackup();
         } catch (Exception ex) {
@@ -35,7 +33,7 @@ public class GarageLogApp extends Application {
 
         // 4. UI Layout & Scene
         MainLayout mainLayout = new MainLayout(
-                primaryStage, repository, vehicleService, maintenanceService,
+                repository, vehicleService, maintenanceService,
                 expenseService, fuelService, reportService, reminderService, settingsService
         );
 

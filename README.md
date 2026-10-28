@@ -69,7 +69,7 @@ GarageLog/
 │   │   ├── java/com/garagelog/
 │   │   │   ├── model/          # Vehicle, MaintenanceRecord, Expense, FuelFillUp, Settings, AppData
 │   │   │   ├── exception/      # GarageLogException hierarchy
-│   │   │   ├── repository/     # GarageRepository interface + JsonGarageRepository (atomic save, backups)
+│   │   │   ├── repository/     # JsonGarageRepository (atomic save, backups)
 │   │   │   ├── service/        # VehicleService, MaintenanceService, ExpenseService,
 │   │   │   │                   # FuelService, ReminderService, SettingsService, ReportService
 │   │   │   ├── ui/             # JavaFX views, dialogs, MainLayout, GarageLogApp

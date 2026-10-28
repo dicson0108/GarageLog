@@ -24,18 +24,20 @@ public class DashboardView extends ScrollPane {
     private final VehicleService vehicleService;
     private final MaintenanceService maintenanceService;
     private final ExpenseService expenseService;
+    private final ReportService reportService;
     private final FuelService fuelService;
     private final ReminderService reminderService;
     private final SettingsService settingsService;
     private final NavigationListener navListener;
 
     public DashboardView(VehicleService vehicleService, MaintenanceService maintenanceService,
-                         ExpenseService expenseService, FuelService fuelService,
+                         ExpenseService expenseService, FuelService fuelService, ReportService reportService,
                          ReminderService reminderService, SettingsService settingsService,
                          NavigationListener navListener) {
         this.vehicleService = vehicleService;
         this.maintenanceService = maintenanceService;
         this.expenseService = expenseService;
+        this.reportService = reportService;
         this.fuelService = fuelService;
         this.reminderService = reminderService;
         this.settingsService = settingsService;
@@ -89,23 +91,8 @@ public class DashboardView extends ScrollPane {
 
         // Monthly spending calculation
         YearMonth thisMonth = YearMonth.now();
-        BigDecimal monthSpending = BigDecimal.ZERO;
-
-        for (MaintenanceRecord m : vehicleService.getAppData().getMaintenanceRecords()) {
-            if (m.getDate() != null && YearMonth.from(m.getDate()).equals(thisMonth) && m.getCost() != null) {
-                monthSpending = monthSpending.add(m.getCost());
-            }
-        }
-        for (Expense exp : vehicleService.getAppData().getExpenses()) {
-            if (exp.getDate() != null && YearMonth.from(exp.getDate()).equals(thisMonth) && exp.getAmount() != null) {
-                monthSpending = monthSpending.add(exp.getAmount());
-            }
-        }
-        for (FuelFillUp f : vehicleService.getAppData().getFuelFillUps()) {
-            if (f.getDate() != null && YearMonth.from(f.getDate()).equals(thisMonth) && f.getTotalCost() != null) {
-                monthSpending = monthSpending.add(f.getTotalCost());
-            }
-        }
+        List<ReportService.MonthlyCategorySpending> monthlySpending = reportService.getMonthlySpendingReport(null, 3);
+        BigDecimal monthSpending = monthlySpending.getLast().total();
 
         List<ReminderService.ReminderItem> reminders = reminderService.getActiveReminders();
         long overdueCount = reminders.stream().filter(r -> r.severity() == ReminderService.ReminderSeverity.OVERDUE).count();
@@ -246,11 +233,8 @@ public class DashboardView extends ScrollPane {
         barChart.setAnimated(false);
 
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        YearMonth current = YearMonth.now();
-        for (int i = 2; i >= 0; i--) {
-            YearMonth ym = current.minusMonths(i);
-            BigDecimal sum = calculateMonthTotal(ym);
-            series.getData().add(new XYChart.Data<>(ym.getMonth().name().substring(0, 3), sum.doubleValue()));
+        for (ReportService.MonthlyCategorySpending month : monthlySpending) {
+            series.getData().add(new XYChart.Data<>(month.yearMonth().getMonth().name().substring(0, 3), month.total().doubleValue()));
         }
         barChart.getData().add(series);
 
@@ -355,26 +339,6 @@ public class DashboardView extends ScrollPane {
 
         box.getChildren().addAll(top, vehicleLink, desc, actions);
         return box;
-    }
-
-    private BigDecimal calculateMonthTotal(YearMonth ym) {
-        BigDecimal sum = BigDecimal.ZERO;
-        for (MaintenanceRecord m : vehicleService.getAppData().getMaintenanceRecords()) {
-            if (m.getDate() != null && YearMonth.from(m.getDate()).equals(ym) && m.getCost() != null) {
-                sum = sum.add(m.getCost());
-            }
-        }
-        for (Expense exp : vehicleService.getAppData().getExpenses()) {
-            if (exp.getDate() != null && YearMonth.from(exp.getDate()).equals(ym) && exp.getAmount() != null) {
-                sum = sum.add(exp.getAmount());
-            }
-        }
-        for (FuelFillUp f : vehicleService.getAppData().getFuelFillUps()) {
-            if (f.getDate() != null && YearMonth.from(f.getDate()).equals(ym) && f.getTotalCost() != null) {
-                sum = sum.add(f.getTotalCost());
-            }
-        }
-        return sum;
     }
 
     public record ActivityRow(LocalDate rawDate, String date, String vehiclePlate, String record, String amount) {}
